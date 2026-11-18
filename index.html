@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VIRALIA">
+<meta name="theme-color" content="#05070f">
+<link rel="apple-touch-icon" href="icono-180.png">
+<link rel="icon" href="icono-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>VIRALIA</title>
+<style>
+:root{--bg:#05070f;--card:#11152a;--card2:#1b1f33;--tx:#eef;--mu:#99a;--na:#ff8a00;--vi:#a24bff;--ok:#2ecc71;--er:#ff5a6a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--tx);font:16px -apple-system,system-ui,sans-serif;
+  padding:calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 84px)}
+header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+header img{width:42px;height:42px;border-radius:11px}
+h1{font-size:24px;margin:0;letter-spacing:.5px}h1 span{color:var(--vi)}
+header small{display:block;color:var(--mu);font-size:11px;letter-spacing:2px}
+h2{font-size:18px;margin:18px 2px 8px}
+.box{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:12px;font-weight:700;color:var(--mu);margin:10px 0 4px;letter-spacing:.5px}
+select,input{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px solid #333a5a;background:#0b0e1d;color:#fff}
+button{font:inherit;font-weight:800;border:0;border-radius:13px;padding:14px 10px;width:100%;cursor:pointer;color:#fff;background:var(--card2)}
+button.pri{color:#000;background:linear-gradient(90deg,var(--na),var(--vi))}
+button.ok{background:var(--ok);color:#000}button.no{background:#2a1820;color:var(--er)}
+button:disabled{opacity:.45}
+.fila{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.aviso{font-size:14px;color:var(--mu);line-height:1.45}
+.barra{height:10px;border-radius:6px;background:#0b0e1d;overflow:hidden;margin:8px 0}
+.barra i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--na),var(--vi));transition:width .3s}
+#log{font-size:12px;color:var(--mu);max-height:180px;overflow:auto;white-space:pre-wrap}
+video{width:100%;max-height:64vh;border-radius:12px;background:#000;display:block;margin-bottom:10px}
+.txt{white-space:pre-wrap;font-size:14px;color:#cdd;background:#0b0e1d;border-radius:10px;padding:10px;margin-bottom:10px}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #222842}
+.item:last-child{border:0}.item b{display:block}.item small{color:var(--mu)}
+.item button{width:auto;padding:10px 14px}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:#0b0e1dee;backdrop-filter:blur(12px);
+  border-top:1px solid #222842;padding-bottom:env(safe-area-inset-bottom)}
+nav button{background:none;border-radius:0;color:var(--mu);font-size:12px;padding:10px 4px}
+nav button.on{color:var(--na)}nav button span{display:block;font-size:22px}
+.pag{display:none}.pag.on{display:block}
+#lienzo{display:none;width:auto;height:52vh;max-width:100%;margin:12px auto 0;border-radius:12px;background:#000}
+#toast{position:fixed;left:14px;right:14px;bottom:calc(env(safe-area-inset-bottom) + 90px);background:#fff;color:#000;font-weight:700;
+  padding:14px;border-radius:14px;text-align:center;display:none;z-index:9}
+#instalar{display:none}
+</style>
+</head>
+<body>
+<header><img src="icono-180.png" alt=""><div><h1>VIRAL<span>IA</span></h1><small>CREA · PUBLICA · CRECE</small></div></header>
+
+<div class="box aviso" id="instalar">
+  <b style="color:var(--tx)">Instala VIRALIA en tu iPhone</b><br>
+  Toca <b>Compartir</b> (cuadro con flecha ⬆️) y luego <b>Añadir a pantalla de inicio</b>. Así queda el icono como una app.
+</div>
+
+<!-- CREAR -->
+<section class="pag on" id="p-crear">
+  <div class="box">
+    <label>CUENTA</label><select id="cCuenta"></select>
+    <label>CONTENIDO</label>
+    <select id="cModo"><option value="datos">Datos curiosos (Wikipedia)</option><option value="noticias">Noticias del nicho</option></select>
+    <label>TEMA (vacío = lo elige VIRALIA)</label><input id="cTema" placeholder="ej: Pulpo, Área 51…">
+    <label>CUÁNTOS VIDEOS</label>
+    <select id="cCant"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select>
+  </div>
+  <button class="pri" id="bCrear">✨ CREAR VIDEOS</button>
+  <div class="box" id="progreso" style="display:none;margin-top:12px">
+    <b id="paso">Preparando…</b>
+    <div class="barra"><i id="barra"></i></div>
+    <p class="aviso" style="margin:0">Deja VIRALIA abierta y la pantalla encendida mientras crea (cada video tarda lo que dura).</p>
+    <button class="no" id="bParar" style="margin-top:10px">DETENER</button>
+  </div>
+  <canvas id="lienzo" width="1080" height="1920"></canvas>
+  <video id="vista" playsinline muted style="display:none"></video>
+  <h2>Actividad</h2>
+  <div class="box"><div id="log">—</div></div>
+</section>
+
+<!-- PUBLICAR -->
+<section class="pag" id="p-publicar">
+  <div class="box aviso" id="resumen"></div>
+  <div id="cola"></div>
+  <div class="box" id="detalle" style="display:none">
+    <video id="dVideo" controls playsinline></video>
+    <div class="aviso" id="dCuenta" style="margin-bottom:8px"></div>
+    <div class="txt" id="dTexto"></div>
+    <button class="pri" id="bPublicar">📲 PUBLICAR EN TIKTOK</button>
+    <div class="fila" style="margin-top:8px"><button id="bCopiar">📋 Copiar texto</button><button class="no" id="bBorrar">🗑 Borrar</button></div>
+    <button class="ok" id="bHecho" style="margin-top:8px">✔ YA LO PUBLIQUÉ</button>
+    <button id="bVolver" style="margin-top:8px">← Volver</button>
+  </div>
+</section>
+
+<!-- CUENTAS -->
+<section class="pag" id="p-cuentas">
+  <div class="box" id="listaCuentas"></div>
+  <div class="box">
+    <b>Añadir cuenta</b>
+    <label>USUARIO DE TIKTOK (sin @)</label><input id="nNombre" autocapitalize="off" autocorrect="off" placeholder="ej: mi_cuenta">
+    <label>NICHO</label><select id="nNicho"></select>
+    <button class="pri" id="bAnadir" style="margin-top:12px">AÑADIR CUENTA</button>
+    <p class="aviso">VIRALIA publica en la cuenta que tengas abierta en tu app de TikTok. Nunca pide contraseñas.</p>
+  </div>
+</section>
+
+<!-- AJUSTES -->
+<section class="pag" id="p-ajustes">
+  <div class="box">
+    <b>Voz</b>
+    <label>VOZ EN ESPAÑOL (se descarga una vez, ~63 MB)</label>
+    <select id="aVoz">
+      <option value="es_MX-claude-high">México · Claude (alta calidad)</option>
+      <option value="es_MX-ald-medium">México · Ald</option>
+      <option value="es_ES-davefx-medium">España · Dave</option>
+      <option value="es_ES-sharvard-medium">España · Sharvard</option>
+    </select>
+    <div class="fila" style="margin-top:10px"><button id="bProbarVoz">▶ Probar voz</button><button id="bBajarVoz">⬇ Descargar voz</button></div>
+    <p class="aviso" id="estadoVoz"></p>
+  </div>
+  <div class="box">
+    <b>Fotos extra (opcional)</b>
+    <label>CLAVE DE PEXELS</label><input id="aPexels" autocapitalize="off" autocorrect="off">
+    <label>CLAVE DE PIXABAY</label><input id="aPixabay" autocapitalize="off" autocorrect="off">
+    <p class="aviso">Se usan solo cuando un tema tiene pocas fotos en Wikipedia. Wikipedia, Bing Noticias y NASA no necesitan clave.</p>
+  </div>
+  <div class="box aviso">
+    <b style="color:var(--tx)">Fuentes conectadas</b><br>
+    📚 Wikipedia (textos y fotos) · 📰 Bing Noticias · 🌌 NASA Imágenes · 🖼 Pexels / Pixabay (con tu clave) · 🎵 TikTok (botón compartir)<br><br>
+    Todo se crea dentro de tu teléfono con tu Wi-Fi o tus datos. Los videos se guardan en el teléfono hasta que los publiques.
+  </div>
+</section>
+
+<nav>
+  <button class="on" data-p="crear"><span>✨</span>Crear</button>
+  <button data-p="publicar"><span>📲</span>Publicar</button>
+  <button data-p="cuentas"><span>👥</span>Cuentas</button>
+  <button data-p="ajustes"><span>⚙️</span>Ajustes</button>
+</nav>
+<div id="toast"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
