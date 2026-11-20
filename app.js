@@ -576,8 +576,36 @@ function toast(t, ms) {
   clearTimeout(e._t); e._t = setTimeout(() => e.style.display = "none", ms || 2800);
 }
 
+// ------------------------------------------------------------------ clave de activación (se guarda solo su huella SHA-256)
+const HUELLA_CLAVE = "3fae600d0a849b1eb008c1ae8ea08f86e5fce68134b94ac388dbe1e271689a19";
+async function huella(t) {
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+  return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+function candado() {
+  if (LS.get("activado", "") === HUELLA_CLAVE) return;
+  const c = $("#candado");
+  c.style.display = "block";
+  let fallos = 0;
+  const probar = async () => {
+    const v = $("#claveApp").value.trim().toUpperCase();
+    if (v && await huella(v) === HUELLA_CLAVE) {
+      LS.set("activado", HUELLA_CLAVE);
+      c.style.display = "none";
+      toast("VIRALIA activada ✔");
+      return;
+    }
+    fallos++;
+    $("#claveErr").textContent = "Clave incorrecta." + (fallos >= 3 ? " Revisa mayúsculas y números." : "");
+    $("#claveApp").value = "";
+  };
+  $("#bActivar").onclick = probar;
+  $("#claveApp").addEventListener("keyup", e => { if (e.key === "Enter") probar(); });
+}
+
 // ------------------------------------------------------------------ arranque
 function iniciar() {
+  candado();
   const nicho = $("#nNicho");
   nicho.innerHTML = Object.entries(NICHOS).map(([k, n]) => `<option value="${k}">${n.icono} ${n.nombre}</option>`).join("");
   pintarCuentas(); pintarLog(); pintarCola();

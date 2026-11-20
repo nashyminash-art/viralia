@@ -143,6 +143,17 @@ nav button.on{color:var(--na)}nav button span{display:block;font-size:22px}
   <button data-p="ajustes"><span>⚙️</span>Ajustes</button>
 </nav>
 <div id="toast"></div>
+<div id="candado" style="display:none;position:fixed;inset:0;z-index:20;background:var(--bg);padding:calc(env(safe-area-inset-top) + 60px) 22px 22px">
+  <div style="text-align:center;margin-bottom:24px"><img src="icono-180.png" alt="" style="width:84px;height:84px;border-radius:20px">
+    <h1 style="margin-top:10px">VIRAL<span>IA</span></h1></div>
+  <div class="box">
+    <b>Clave de activación</b>
+    <p class="aviso">Escribe la clave de VIRALIA para activar la app en este teléfono (solo la primera vez).</p>
+    <input id="claveApp" type="password" autocapitalize="characters" autocorrect="off" autocomplete="off" placeholder="Clave">
+    <button class="pri" id="bActivar" style="margin-top:12px">ACTIVAR</button>
+    <p class="aviso" id="claveErr" style="color:var(--er)"></p>
+  </div>
+</div>
 <script type="module" src="app.js"></script>
 </body>
 </html>
