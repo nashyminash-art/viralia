@@ -514,7 +514,31 @@ function cerrarDetalle() {
   $("#detalle").style.display = "none"; $("#cola").style.display = "block"; $("#resumen").style.display = "block";
   actual = null; pintarCola();
 }
+// ------------------------------------------------------------------ app Android (APK): compartir con los plugins nativos
+function esAppAndroid() {
+  const c = window.Capacitor;
+  return !!(c && c.isNativePlatform && c.isNativePlatform());
+}
+function aBase64(blob) {
+  return new Promise((ok, mal) => {
+    const r = new FileReader();
+    r.onload = () => ok(String(r.result).split(",", 2)[1]);
+    r.onerror = () => mal(r.error);
+    r.readAsDataURL(blob);
+  });
+}
+async function compartirAndroid(file, texto) {
+  const c = window.Capacitor;
+  const Filesystem = c.registerPlugin("Filesystem"), Share = c.registerPlugin("Share");
+  toast("Preparando el video…", 2000);
+  const r = await Filesystem.writeFile({ path: file.name, data: await aBase64(file), directory: "CACHE" });
+  await Share.share({ title: "VIRALIA", text: texto, files: [r.uri], dialogTitle: "Publicar en TikTok" });
+}
+
 function copiar(t) {
+  if (esAppAndroid()) {
+    try { window.Capacitor.registerPlugin("Clipboard").write({ string: t }); return; } catch (e) {}
+  }
   try { navigator.clipboard.writeText(t); return; } catch (e) {}
   const a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select();
   try { document.execCommand("copy"); } catch (e) {} a.remove();
@@ -581,6 +605,11 @@ function iniciar() {
   $("#bPublicar").onclick = async () => {
     if (!archivoActual) return;
     copiar(actual.descripcion);
+    if (esAppAndroid()) {
+      try { await compartirAndroid(archivoActual, actual.descripcion); toast("Pega la descripción en TikTok y publica. Luego toca YA LO PUBLIQUÉ.", 4500); }
+      catch (e) { if (!/cancel/i.test(String(e && e.message))) toast("No se pudo compartir: " + (e.message || e), 4500); }
+      return;
+    }
     if (!navigator.canShare || !navigator.canShare({ files: [archivoActual] })) {
       toast("Tu navegador no deja compartir videos. Abre VIRALIA en Safari.", 4500); return;
     }
