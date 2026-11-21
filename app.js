@@ -1,3 +1,4 @@
+import { ESTILOS, estilo, filtro, marcoPNG, marcoURL } from "./estilos.js";
 // VIRALIA para el teléfono: crea los videos DENTRO del teléfono con su conexión (Wi-Fi o datos).
 // Wikipedia (texto + fotos) · noticias (GDELT) · NASA · Pexels/Pixabay opcionales -> guion -> voz (Piper, en el teléfono)
 // -> video vertical 1080x1920 con cortes cada 3 s y subtítulos -> se guarda en el teléfono -> botón "Publicar en TikTok".
@@ -36,7 +37,11 @@ const Videos = {
   todos: () => idb("readonly", s => s.getAll()),
   uno: id => idb("readonly", s => s.get(id)),
   guardar: v => idb("readwrite", s => s.put(v)),
-  borrar: id => idb("readwrite", s => s.delete(id)),
+  async borrar(id) {
+    const v = await idb("readonly", s => s.get(id));
+    if (v && v.ruta && window.Capacitor && Capacitor.Plugins.Motor) { try { await Capacitor.Plugins.Motor.borrar({ ruta: v.ruta }); } catch (e) {} }
+    return idb("readwrite", s => s.delete(id));
+  },
 };
 
 // ------------------------------------------------------------------ nichos y temas
@@ -47,6 +52,42 @@ const NICHOS = {
   historia: { nombre: "Historia", icono: "🏛️", tags: ["historia", "sabiasque"], noticias: "hallazgo arqueológico" },
   planeta: { nombre: "Planeta y Vía Láctea", icono: "🌌", tags: ["universo", "astronomia"], noticias: "NASA descubrimiento espacio" },
   misterios: { nombre: "Misterios", icono: "🕯️", tags: ["misterios", "sinresolver"], noticias: "misterio sin resolver" },
+  terror: { nombre: "Leyendas y terror", icono: "👻", tags: ["leyendas", "terror"], noticias: "leyenda urbana" },
+  cuerpo: { nombre: "Cuerpo humano", icono: "🧠", tags: ["cuerpohumano", "salud"], noticias: "estudio cuerpo humano" },
+  ciencia: { nombre: "Ciencia e inventos", icono: "🔬", tags: ["ciencia", "inventos"], noticias: "científicos descubren" },
+  tecnologia: { nombre: "Tecnología", icono: "🤖", tags: ["tecnologia", "inteligenciaartificial"], noticias: "tecnología nueva" },
+  lugares: { nombre: "Lugares del mundo", icono: "🌍", tags: ["viajes", "lugaresincreibles"], noticias: "lugar increíble descubierto" },
+  comida: { nombre: "Comida", icono: "🍫", tags: ["comida", "curiosidades"], noticias: "comida curiosidad" },
+  deportes: { nombre: "Deportes", icono: "⚽", tags: ["deportes", "futbol"], noticias: "récord deportivo" },
+  famosos: { nombre: "Personajes históricos", icono: "👑", tags: ["historia", "personajes"], noticias: "historia personaje" },
+};
+const TEMAS_EXTRA = {
+  terror: ["Llorona", "Chupacabras", "Bruja de Blair", "Drácula", "Vampiro", "Hombre lobo", "Isla de las Muñecas", "Poveglia",
+    "Castillo de Bran", "Zombi", "Ouija", "Slender Man", "Annabelle", "Exorcismo", "Momia", "Fantasma", "Casa Winchester",
+    "Mothman", "Bigfoot", "Yeti", "Nahual", "Chaneque", "Wendigo", "Banshee", "Catacumbas de París", "Bosque de Aokigahara"],
+  cuerpo: ["Cerebro humano", "Corazón humano", "Ojo humano", "Piel", "Hueso", "Sangre", "ADN", "Sueño", "Bostezo", "Hipo", "Risa",
+    "Huella dactilar", "Pulmón", "Hígado", "Riñón", "Estómago", "Diente", "Cabello", "Uña", "Memoria (proceso)", "Sistema inmunitario",
+    "Músculo", "Lengua", "Oído", "Microbiota intestinal", "Estornudo"],
+  ciencia: ["Agujero negro", "Electricidad", "Imán", "Rayo láser", "Penicilina", "Bombilla", "Teléfono", "Internet", "Avión",
+    "Rayos X", "Energía nuclear", "Vacuna", "Microscopio", "Telescopio", "Dinamita", "Imprenta", "Rueda", "Brújula", "Reloj",
+    "Radio (medio de comunicación)", "Televisión", "Cohete", "Satélite artificial", "Nikola Tesla", "Thomas Alva Edison", "Marie Curie"],
+  tecnologia: ["Inteligencia artificial", "Robot", "Teléfono inteligente", "Videojuego", "Bitcoin", "Computadora cuántica",
+    "Realidad virtual", "Dron", "Impresión 3D", "Tesla, Inc.", "Apple", "Google", "Steve Jobs", "Bill Gates", "Elon Musk",
+    "Nintendo", "PlayStation", "Minecraft", "Wi-Fi", "Bluetooth", "GPS", "Código QR", "Hacker", "Fibra óptica", "Chip"],
+  lugares: ["Machu Picchu", "Chichén Itzá", "Petra", "Taj Mahal", "Torre Eiffel", "Gran Muralla China", "Coliseo", "Islas Galápagos",
+    "Salar de Uyuni", "Cataratas del Iguazú", "Cataratas del Niágara", "Gran Cañón del Colorado", "Monte Everest", "Antártida",
+    "Isla de Pascua", "Venecia", "Dubái", "Burj Khalifa", "Santorini", "Bora Bora", "Islandia", "Groenlandia", "Desierto de Atacama",
+    "Lago Titicaca", "Amazonia", "Teotihuacan", "Ciudad del Vaticano", "Mónaco", "Tokio", "Nueva York"],
+  comida: ["Chocolate", "Café", "Pizza", "Hamburguesa", "Taco", "Sushi", "Helado", "Palomitas de maíz", "Miel", "Queso", "Pan",
+    "Aguacate", "Plátano", "Fresa", "Tomate", "Papa", "Maíz", "Arroz", "Coca-Cola", "Chile (pimiento)", "Vainilla", "Azúcar",
+    "Sal", "Té", "Ceviche", "Mole"],
+  deportes: ["Fútbol", "Copa Mundial de la FIFA", "Juegos Olímpicos", "Lionel Messi", "Cristiano Ronaldo", "Pelé", "Diego Maradona",
+    "Michael Jordan", "Usain Bolt", "Muhammad Ali", "Baloncesto", "Tenis", "Fórmula 1", "Boxeo", "Béisbol", "Surf", "Ajedrez",
+    "Maratón", "Real Madrid Club de Fútbol", "Fútbol Club Barcelona", "Copa Libertadores", "Super Bowl", "Lucha libre mexicana"],
+  famosos: ["Cleopatra", "Julio César", "Napoleón Bonaparte", "Alejandro Magno", "Cristóbal Colón", "Leonardo da Vinci",
+    "Albert Einstein", "Isaac Newton", "Galileo Galilei", "Marie Curie", "Nikola Tesla", "Frida Kahlo", "Simón Bolívar",
+    "Moctezuma II", "Atahualpa", "Genghis Khan", "Juana de Arco", "William Shakespeare", "Wolfgang Amadeus Mozart",
+    "Vincent van Gogh", "Pablo Picasso", "Charles Darwin", "Abraham Lincoln", "Mahatma Gandhi", "Martin Luther King", "Tutankamón"],
 };
 const TEMAS = {
   ovnis: ["Incidente ovni de Roswell", "Área 51", "Luces de Phoenix", "Incidente del bosque de Rendlesham", "Ola ovni belga",
@@ -79,6 +120,17 @@ const TEMAS = {
   misterios: ["Triángulo de las Bermudas", "Manuscrito Voynich", "Mary Celeste", "Incidente del paso Diatlov", "Atlántida", "Stonehenge",
     "Isla de Pascua", "Señal Wow!", "Líneas de Nazca", "Mecanismo de Anticitera", "Monstruo del lago Ness", "Jack el Destripador", "Área 51"],
 };
+
+Object.assign(TEMAS, TEMAS_EXTRA);
+TEMAS.ovnis.push("Extraterrestre", "Abducción", "Encuentro cercano", "Proyecto Blue Book", "Marfa lights", "Avistamiento ovni de 1561 en Núremberg");
+TEMAS.animales.push("Pulpo de anillos azules", "Pez globo", "Axolote", "Mantis religiosa", "Lobo marino", "Orca", "Panda gigante",
+  "León", "Tigre", "Águila real", "Cóndor andino", "Jaguar", "Anaconda", "Piraña", "Escorpión", "Tarántula", "Luciérnaga", "Pez abisal");
+TEMAS.planeta.push("Plutón (planeta enano)", "Mercurio (planeta)", "Urano (planeta)", "Eclipse solar", "Meteorito", "Asteroide",
+  "Agujero de gusano", "Materia oscura", "Telescopio espacial James Webb", "Voyager 1", "Gravedad", "Estrella fugaz");
+TEMAS.misterios.push("Desaparición del vuelo 370 de Malaysia Airlines", "Ciudad perdida de Z", "El Dorado", "Santo Grial",
+  "Arca de la Alianza", "Piedras de Ica", "Mapa de Piri Reis", "Pirámide de Bosnia", "Esfinge de Guiza", "Teotihuacan");
+TEMAS.historia.push("Primera Guerra Mundial", "Segunda Guerra Mundial", "Revolución mexicana", "Revolución francesa",
+  "Caída del muro de Berlín", "Hundimiento del Titanic", "Imperio inca", "Imperio mongol", "Esparta", "Gladiador", "Pirata", "Caballero medieval");
 
 function temaNuevo(nicho) {
   const lista = TEMAS[nicho] || TEMAS.curiosos;
@@ -343,9 +395,75 @@ function dibujar(g, t, v) {
 }
 
 // ------------------------------------------------------------------ montaje + grabación (MediaRecorder)
+const MUXER_URL = "https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/+esm";
+
+/** La mejor configuración H.264 que el teléfono puede codificar (1080p si se puede, si no 720p) + audio AAC. */
+async function configVideo() {
+  if (!window.VideoEncoder || !window.AudioEncoder || !window.VideoFrame) return null;
+  const acfg = { codec: "mp4a.40.2", sampleRate: 48000, numberOfChannels: 1, bitrate: 128000 };
+  try { if (!(await AudioEncoder.isConfigSupported(acfg)).supported) return null; } catch (e) { return null; }
+  const opciones = [[1080, 1920, "avc1.640028"], [1080, 1920, "avc1.4d0028"], [1080, 1920, "avc1.420034"],
+    [720, 1280, "avc1.42001f"], [720, 1280, "avc1.420034"]];
+  for (const [w, h, codec] of opciones) {
+    const vcfg = { codec, width: w, height: h, bitrate: w >= 1080 ? 4000000 : 2500000, framerate: 30, avc: { format: "avc" } };
+    try { if ((await VideoEncoder.isConfigSupported(vcfg)).supported) return { v: vcfg, a: acfg }; } catch (e) {}
+  }
+  return null;
+}
+
+async function a48k(pista) {
+  if (pista.sampleRate === 48000) return pista;
+  const off = new OfflineAudioContext(1, Math.ceil(pista.duration * 48000), 48000);
+  const s = off.createBufferSource(); s.buffer = pista; s.connect(off.destination); s.start();
+  return off.startRendering();
+}
+
+async function codificarMP4(v, pista, total, cfg) {
+  const { Muxer, ArrayBufferTarget } = await import(MUXER_URL);
+  const W2 = cfg.v.width, H2 = cfg.v.height;
+  const muxer = new Muxer({ target: new ArrayBufferTarget(), video: { codec: "avc", width: W2, height: H2 },
+    audio: { codec: "aac", numberOfChannels: 1, sampleRate: 48000 }, fastStart: "in-memory" });
+  let fallo = null;
+  const venc = new VideoEncoder({ output: (c, m) => muxer.addVideoChunk(c, m), error: e => { fallo = e; } });
+  venc.configure(cfg.v);
+  const aenc = new AudioEncoder({ output: (c, m) => muxer.addAudioChunk(c, m), error: e => { fallo = e; } });
+  aenc.configure(cfg.a);
+
+  // voz
+  const datos = (await a48k(pista)).getChannelData(0), N = 4096;
+  for (let i = 0; i < datos.length; i += N) {
+    const trozo = datos.slice(i, Math.min(i + N, datos.length));
+    const ad = new AudioData({ format: "f32-planar", sampleRate: 48000, numberOfFrames: trozo.length, numberOfChannels: 1,
+      timestamp: Math.round(i / 48000 * 1e6), data: trozo });
+    aenc.encode(ad); ad.close();
+  }
+
+  // imagen, cuadro a cuadro
+  const lienzo = $("#lienzo"), g = lienzo.getContext("2d");
+  const chico = W2 === W ? null : Object.assign(document.createElement("canvas"), { width: W2, height: H2 });
+  const gc = chico && chico.getContext("2d");
+  const cuadros = Math.ceil(total * 30);
+  for (let i = 0; i < cuadros; i++) {
+    if (parar) break;
+    if (fallo) throw fallo;
+    dibujar(g, i / 30, v);
+    let fuente = lienzo;
+    if (chico) { gc.drawImage(lienzo, 0, 0, W2, H2); fuente = chico; }
+    const vf = new VideoFrame(fuente, { timestamp: Math.round(i * 1e6 / 30), duration: Math.round(1e6 / 30) });
+    venc.encode(vf, { keyFrame: i % 60 === 0 }); vf.close();
+    while (venc.encodeQueueSize > 4) await new Promise(r => setTimeout(r, 5));
+    if (i % 15 === 0) { paso(`Montando el video… ${Math.round(i / cuadros * 100)} %`); await new Promise(r => setTimeout(r, 0)); }
+  }
+  await venc.flush(); await aenc.flush();
+  if (fallo) throw fallo;
+  muxer.finalize(); venc.close(); aenc.close();
+  if (parar) throw new Error("Detenido.");
+  return new Blob([muxer.target.buffer], { type: "video/mp4" });
+}
+
 function tipoVideo() {
   const t = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4;codecs=avc1,mp4a", "video/mp4",
-    "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+    "video/webm;codecs=h264,opus", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
   return t.find(x => window.MediaRecorder && MediaRecorder.isTypeSupported(x)) || "";
 }
 
@@ -378,6 +496,14 @@ async function montar(guion, actx) {
   let n = 0;
   const tramos = escenas.map(e => Array.from({ length: Math.max(1, Math.ceil(e.duracion / CORTE)) }, () => (n++) % fotos.length));
   const v = { escenas, fotos, tramos, titulo: guion.titulo };
+
+  // 3a) MP4 de verdad (H.264 + AAC) con WebCodecs: lo que TikTok acepta, y más rápido que grabar en tiempo real
+  const cfg = await configVideo();
+  if (cfg) {
+    const lz = $("#lienzo");
+    lz.style.display = "block";
+    try { return await codificarMP4(v, pista, total, cfg); } finally { lz.style.display = "none"; }
+  }
 
   // 3) grabar el lienzo + la voz en tiempo real
   const lienzo = $("#lienzo"), g = lienzo.getContext("2d");
@@ -418,6 +544,229 @@ async function montar(guion, actx) {
   return new Blob(trozos, { type: mime.split(";")[0] });
 }
 
+// ------------------------------------------------------------------ crear desde un enlace (solo app Android: yt-dlp + ffmpeg)
+const Motor = () => window.Capacitor.Plugins.Motor;
+const TRANSICIONES = ["fade", "slideleft", "circleopen", "wipeleft", "slideup", "dissolve", "radial", "smoothleft",
+  "circleclose", "wiperight", "smoothup", "fadeblack", "slideright"];
+
+function segundos(hms) { const [h, m, s] = hms.split(":").map(Number); return h * 3600 + m * 60 + s; }
+
+async function infoVideo(ruta) {
+  const r = await Motor().ffmpeg({ args: ["-hide_banner", "-i", ruta] });
+  const d = /Duration:\s*(\d+:\d+:[\d.]+)/.exec(r.salida || "");
+  return { duracion: d ? segundos(d[1]) : 0, audio: /Stream #.*Audio:/.test(r.salida || "") };
+}
+
+const FUENTES = [["sans-serif-black", "Negrita extra · gruesa"], ["sans-serif-condensed", "Condensada · alta"], ["serif", "Serif · elegante"],
+  ["cursive", "Cursiva"], ["casual", "Casual · divertida"], ["monospace", "Técnica"], ["sans-serif-medium", "Suave"]];
+const RECETAS = {
+  viral: { nombre: "Viral", desc: "Letras grandes con borde, zoom y cambios cada 3 s.", estilo: "ninguno", caja: false, fijo: false, tam: 110, color: "#FFE600" },
+  cine: { nombre: "Cine", desc: "Color de película, bordes oscuros y texto en caja.", estilo: "color_cine", caja: "#000000", fijo: true, tam: 70, color: "#FFFFFF" },
+  noticia: { nombre: "Noticia", desc: "Frases en caja azul, imagen sin tocar.", estilo: "noti_oceano", caja: "#1E64C8", fijo: true, tam: 76, color: "#FFFFFF" },
+  limpio: { nombre: "Limpio", desc: "Texto pequeño y nada más.", estilo: "ninguno", caja: false, fijo: true, tam: 56, color: "#FFFFFF" },
+};
+
+const rr = (g, x, y, w, h, r) => { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h); };
+function envolverTxt(g, texto, ancho) {
+  const out = []; let l = "";
+  for (const p of texto.split(" ")) { const t = l ? l + " " + p : p; if (g.measureText(t).width > ancho && l) { out.push(l); l = p; } else l = t; }
+  if (l) out.push(l); return out;
+}
+
+/** Título en letras grandes (tipo, tamaño y color elegidos), con borde negro o en caja. PNG transparente 1080x1920. */
+async function pngTitulo(titulo, carpeta, op) {
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d");
+  g.font = `900 ${op.tam}px ${op.fuente}, sans-serif`; g.textAlign = "center"; g.textBaseline = "top"; g.lineJoin = "round";
+  const lineas = envolverTxt(g, titulo.toUpperCase(), W - 140), alto = op.tam * 1.15;
+  const y0 = op.pos != null ? op.pos : 230;
+  if (op.caja) {
+    const ancho = Math.min(W - 60, Math.max(...lineas.map(l => g.measureText(l).width)) + 70);
+    g.fillStyle = op.caja; rr(g, (W - ancho) / 2, y0 - 22, ancho, lineas.length * alto + 40, 22); g.fill();
+  }
+  lineas.forEach((l, k) => {
+    const y = y0 + k * alto;
+    if (!op.caja) { g.lineWidth = Math.round(op.tam / 5); g.strokeStyle = "#000"; g.strokeText(l, W / 2, y); }
+    g.fillStyle = op.color; g.fillText(l, W / 2, y);
+  });
+  const blob = await new Promise(ok => c.toBlob(ok, "image/png"));
+  await window.Capacitor.Plugins.Filesystem.writeFile({ path: "links/titulo.png", data: await aBase64(blob), directory: "CACHE", recursive: true });
+  return carpeta + "/titulo.png";
+}
+
+async function guardarPNG(blob, nombre, carpeta) {
+  await window.Capacitor.Plugins.Filesystem.writeFile({ path: "links/" + nombre, data: await aBase64(blob), directory: "CACHE", recursive: true });
+  return carpeta + "/" + nombre;
+}
+
+/** Volumen por segundo (0..1) del audio: los momentos intensos suelen ser los mejores. */
+async function energiaVideo(ruta) {
+  try {
+    await Motor().ffmpeg({ args: ["-hide_banner", "-y", "-i", ruta, "-vn", "-ac", "1", "-af",
+      "aresample=8000,asetnsamples=n=8000:p=0,astats=metadata=1:reset=1,ametadata=print:key=lavfi.astats.Overall.RMS_level:file=rms.txt", "-f", "null", "-"] });
+    const r = await window.Capacitor.Plugins.Filesystem.readFile({ path: "links/rms.txt", directory: "CACHE", encoding: "utf8" });
+    const v = [...String(r.data).matchAll(/RMS_level=(-?[\d.]+|-inf)/g)].map(m => m[1] === "-inf" ? 0 : Math.pow(10, parseFloat(m[1]) / 20));
+    if (v.length < 4) return [];
+    const mx = [...v].sort((a, b) => a - b)[Math.floor(v.length * 0.98)] || 1;
+    return v.map(x => Math.min(1, x / mx));
+  } catch (e) { return []; }
+}
+
+/** Elige los n mejores momentos (picos de volumen y cambios bruscos), separados entre sí. Devuelve {inicios, puntos, etiquetas}. */
+function mejoresMomentos(en, dur, n, D, antes) {
+  const sm = (a, k) => a.map((_, i) => { let s = 0, c = 0; for (let j = Math.max(0, i - k); j <= Math.min(a.length - 1, i + k); j++) { s += a[j]; c++; } return s / c; });
+  const salto = en.map((x, i) => Math.abs(x - (en[i - 1] ?? x)));
+  const interes = sm(en, 1).map((x, i) => x + 0.8 * sm(salto, 1)[i]);
+  const orden = interes.map((v, i) => [v, i]).sort((a, b) => b[0] - a[0]);
+  const ini = [];
+  for (const [, p] of orden) {
+    const a = Math.max(0, Math.min(dur - D - 0.2, p - antes));
+    if (ini.every(x => Math.abs(x - a) >= 4)) ini.push(a);
+    if (ini.length >= n) break;
+  }
+  ini.sort((a, b) => a - b);
+  const tope = Math.max(...interes, 0.001);
+  const media = ini.map(a => { const s = en.slice(Math.floor(a), Math.ceil(a + D)); return s.reduce((x, y) => x + y, 0) / Math.max(1, s.length); });
+  const pico = ini.map(a => Math.max(...interes.slice(Math.floor(a), Math.ceil(a + D)), 0) / tope);
+  const puntos = Math.round(100 * (0.55 * (pico.reduce((x, y) => x + y, 0) / Math.max(1, pico.length)) + 0.45 * Math.min(1, (media.reduce((x, y) => x + y, 0) / Math.max(1, media.length)) / 0.6)));
+  const etq = [];
+  if (en[Math.floor(ini[0] || 0)] >= 0.45) etq.push("Arranque fuerte");
+  if (salto.reduce((x, y) => x + y, 0) / Math.max(1, salto.length) > 0.12) etq.push("Mucha acción");
+  if (media.reduce((x, y) => x + y, 0) / Math.max(1, media.length) < 0.12) etq.push("Sin diálogo");
+  return { inicios: ini, puntos, etiquetas: etq };
+}
+
+async function crearDesdeLink(url, dur, tituloPedido, c, op) {
+  if (!esAppAndroid()) throw new Error("Crear desde un enlace solo funciona en la app de Android (APK).");
+  paso("Descargando el video del enlace…");
+  const d = await Motor().descargar({ url });
+  try {
+    const info = await infoVideo(d.ruta);
+    if (info.duracion < 4) throw new Error("El video es demasiado corto.");
+    const D = 3.3, T = 0.3;                                         // cada corte dura 3 s visibles + 0,3 s de transición (una transición cada 3 s)
+    let n = Math.round((dur - T) / (D - T));
+    n = Math.max(2, Math.min(n, Math.floor(info.duracion * 0.9 / 3)));
+    let puntos, resumen = "";
+    if (op.mejores) {
+      paso("Buscando los mejores momentos…");
+      const en = await energiaVideo(d.ruta);
+      if (en.length) {
+        const m = mejoresMomentos(en, info.duracion, n, D, 1);
+        puntos = m.inicios; n = puntos.length;
+        resumen = `${m.puntos} puntos` + (m.etiquetas.length ? " · " + m.etiquetas.join(", ") : "");
+      }
+    }
+    if (!puntos) {
+      const ini = info.duracion * 0.05, fin = info.duracion * 0.95 - D;
+      puntos = Array.from({ length: n }, (_, i) => ini + (fin - ini) * i / Math.max(1, n - 1));
+    }
+    const titulo = (tituloPedido || d.titulo || "Mira esto").slice(0, 70);
+    const png = await pngTitulo(titulo, d.carpeta, op);
+    let marco = null;
+    const mb = await marcoPNG(op.estilo, titulo, c.nombre === "mi TikTok" ? "" : c.nombre);
+    if (mb) marco = await guardarPNG(mb, "marco.png", d.carpeta);
+    const fil = filtro(op.estilo);
+
+    const salida = `${d.carpeta}/viralia_${Date.now()}.mp4`;
+    const segs = [];
+    let fase = "", base = 0, largo = 1;
+    const oyente = await Motor().addListener("progreso", ev => {
+      const m = /time=(\d+:\d+:[\d.]+)/.exec(ev.linea || "");
+      if (m) paso(`${fase} ${Math.min(99, Math.round((base + segundos(m[1])) / largo * 100))} %`);
+    });
+    const correr = async args => {
+      const r = await Motor().ffmpeg({ args: [...args, "-threads", "2"] });
+      if (r.codigo !== 0) { const e = new Error("ffmpeg " + r.codigo + ": " + (r.salida || "").trim().split("\n").filter(l => !/^\s*frame=/.test(l)).slice(-3).join(" | ")); e.ffmpeg = true; throw e; }
+    };
+    const encuadre = op.completa
+      ? "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,fps=30,format=yuv420p[v]"
+      : "[0:v]split[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:2[f];" +
+        "[b]scale=1080:1920:force_original_aspect_ratio=decrease[c];[f][c]overlay=(W-w)/2:(H-h)/2,setsar=1,fps=30,format=yuv420p[v]";
+    try {
+      // paso 1: cada corte de 3 s por separado (vertical) -> poca memoria. Si uno falla se reintenta y, si vuelve a fallar, se salta.
+      for (let i = 0; i < n; i++) {
+        if (parar) throw new Error("Detenido.");
+        fase = `Preparando corte ${i + 1}/${n}…`; base = 0; largo = D;
+        const seg = `${d.carpeta}/seg_${i}.mp4`;
+        const a = ["-hide_banner", "-y", "-ss", puntos[i].toFixed(2), "-t", String(D), "-i", d.ruta];
+        if (!info.audio) a.push("-f", "lavfi", "-t", String(D), "-i", "anullsrc=r=44100:cl=stereo");
+        a.push("-filter_complex", encuadre, "-map", "[v]", "-map", info.audio ? "0:a:0" : "1:a", "-ac", "2", "-ar", "44100", "-t", String(D),
+          "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-c:a", "aac", "-b:a", "160k", seg);
+        let ok = false, ultimo = null;
+        for (let k = 0; k < 2 && !ok; k++) { try { await correr(a); ok = true; } catch (e) { ultimo = e; } }
+        if (ok) segs.push(seg); else if (!segs.length && i === n - 1) throw ultimo;
+      }
+      if (segs.length < 2) throw new Error("No se pudieron preparar los cortes del video.");
+      const m = segs.length, total = m * D - (m - 1) * T;
+      // paso 2: unir con una transición distinta cada 3 s, color del estilo, marco y título
+      fase = "Uniendo con transiciones…"; base = 0; largo = total;
+      const armar = conFiltro => {
+        const args = ["-hide_banner", "-y"];
+        segs.forEach(sg => args.push("-i", sg));
+        let k = m; const idxTitulo = k++; args.push("-i", png);
+        let idxMarco = -1; if (marco) { idxMarco = k++; args.push("-i", marco); }
+        const f = [];
+        for (let i = 0; i < m; i++) f.push(`[${i}:v]settb=AVTB,setpts=PTS-STARTPTS,fps=30,format=yuv420p[v${i}]`, `[${i}:a]asetpts=PTS-STARTPTS[s${i}]`);
+        let vprev = "v0", aprev = "s0";
+        for (let i = 1; i < m; i++) {
+          const tr = TRANSICIONES[(i - 1) % TRANSICIONES.length];
+          f.push(`[${vprev}][v${i}]xfade=transition=${tr}:duration=${T}:offset=${(i * (D - T)).toFixed(2)}[x${i}]`, `[${aprev}][s${i}]acrossfade=d=${T}[y${i}]`);
+          vprev = `x${i}`; aprev = `y${i}`;
+        }
+        if (conFiltro && fil) { f.push(`[${vprev}]${fil}[vg]`); vprev = "vg"; }
+        if (marco) { f.push(`[${vprev}][${idxMarco}:v]overlay=0:0[vm]`); vprev = "vm"; }
+        f.push(`[${vprev}][${idxTitulo}:v]overlay=0:0${op.fijo ? "" : ":enable='lt(t,4)'"}[vf]`);
+        args.push("-filter_complex", f.join(";"), "-map", "[vf]", "-map", `[${aprev}]`, "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+          "-pix_fmt", "yuv420p", "-r", "30", "-c:a", "aac", "-b:a", "128k", "-ar", "44100", "-movflags", "+faststart", salida);
+        return args;
+      };
+      try { await correr(armar(true)); }
+      catch (e) { if (fil) await correr(armar(false)); else throw e; }       // si el celular no tiene ese filtro de color, sale sin él
+    } finally {
+      oyente && oyente.remove && oyente.remove();
+      for (const sg of segs) { try { await Motor().borrar({ ruta: sg }); } catch (e) {} }
+    }
+
+    const palabras = titulo.split(/\s+/).map(etiqueta).filter(t => t.length > 3 && t.length <= 20).slice(0, 2);
+    const tags = [...new Set([...palabras, "clips", "viral", "parati", "fyp"])];
+    return {
+      tema: titulo, ruta: salida, resumen,
+      descripcion: `${titulo} 🎬🔥\n¿Qué opinas? Te leo en comentarios 👇\n` + tags.map(t => "#" + t).join(" "),
+    };
+  } finally {
+    try { await Motor().borrar({ ruta: d.ruta }); } catch (e) {}
+  }
+}
+
+/** Opciones elegidas en la pantalla (receta, estilo, letra, tamaño, color, encuadre, mejores momentos). */
+function opcionesLink() {
+  return { estilo: $("#lkEstilo").value, fuente: $("#lkFuente").value, tam: +$("#lkTam").value, color: $("#lkColor").value,
+           caja: LINK.caja, fijo: LINK.fijo, completa: $("#lkEncuadre").value === "completa", mejores: $("#lkMejores").checked, pos: 230 };
+}
+const LINK = { caja: false, fijo: false };
+function iniciarLink() {
+  const r = $("#lkReceta");
+  r.innerHTML = Object.entries(RECETAS).map(([k, v]) => `<button type="button" data-r="${k}"><b>${v.nombre}</b><small>${v.desc}</small></button>`).join("");
+  const grupos = [...new Set(ESTILOS.map(e => e.grupo))];
+  $("#lkEstilo").innerHTML = grupos.map(g => `<optgroup label="${g}">` + ESTILOS.filter(e => e.grupo === g).map(e => `<option value="${e.id}">${e.nombre}</option>`).join("") + "</optgroup>").join("");
+  $("#lkFuente").innerHTML = FUENTES.map(([v, n]) => `<option value="${v}">${n}</option>`).join("");
+  const vista = async () => {
+    const u = await marcoURL($("#lkEstilo").value, "", "");
+    $("#lkVista").style.backgroundImage = u ? `url(${u})` : "none";
+    const t = $("#lkVistaTxt"); t.style.fontFamily = $("#lkFuente").value; t.style.color = $("#lkColor").value;
+    t.style.fontSize = Math.round(+$("#lkTam").value / 4.2) + "px"; t.style.background = LINK.caja || "transparent";
+    t.style.webkitTextStroke = LINK.caja ? "0" : "2px #000"; $("#lkTamN").textContent = $("#lkTam").value;
+  };
+  const aplicar = k => {
+    const v = RECETAS[k]; LINK.caja = v.caja; LINK.fijo = v.fijo;
+    $("#lkEstilo").value = v.estilo; $("#lkTam").value = v.tam; $("#lkColor").value = v.color;
+    r.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.r === k)); vista();
+  };
+  r.querySelectorAll("button").forEach(b => b.onclick = () => aplicar(b.dataset.r));
+  ["lkEstilo", "lkFuente", "lkTam", "lkColor"].forEach(id => $("#" + id).oninput = vista);
+  aplicar("viral");
+}
+
 // ------------------------------------------------------------------ crear (pestaña Crear)
 let parar = false, trabajando = false, bloqueo = null;
 function paso(t) { $("#paso").textContent = t; }
@@ -430,9 +779,38 @@ function pintarLog() { $("#log").textContent = LS.get("log", []).join("\n") || "
 async function crear() {
   if (trabajando) return;
   const cuentas = LS.get("cuentas", []);
-  const c = cuentas[+$("#cCuenta").value];
-  if (!c) { toast("Primero añade una cuenta"); return; }
-  const cant = +$("#cCant").value, modo = $("#cModo").value, temaPedido = $("#cTema").value.trim();
+  const elegida = cuentas[+$("#cCuenta").value];
+  // la categoría se elige aquí mismo; la cuenta es opcional (se publica en la que esté abierta en TikTok)
+  const c = { nombre: elegida ? elegida.nombre : "mi TikTok", nicho: $("#cNicho").value };
+  LS.set("ultima_categoria", c.nicho);
+  const sel = $("#cTemaSel").value;
+  const cant = +$("#cCant").value, modo = $("#cModo").value;
+  const temaPedido = sel === "__otro" ? $("#cTema").value.trim() : (sel === "__auto" ? "" : sel);
+  if (sel === "__otro" && !temaPedido) { toast("Escribe el tema"); return; }
+
+  if (modo === "link") {
+    const url = $("#cLink").value.trim();
+    if (!/^https?:\/\/\S+/.test(url)) { toast("Pega un enlace de YouTube o TikTok"); return; }
+    if (!esAppAndroid()) { toast("Crear desde un enlace funciona en la app de Android (APK).", 4000); return; }
+    trabajando = true; parar = false;
+    $("#bCrear").disabled = true; $("#progreso").style.display = "block"; $("#barra").style.width = "10%";
+    try {
+      const r = await crearDesdeLink(url, +$("#cDur").value, $("#cTitulo").value.trim(), c, opcionesLink());
+      await Videos.guardar({ id: Date.now() + "_" + Math.random().toString(36).slice(2, 7), cuenta: c.nombre, tema: r.tema,
+        descripcion: r.descripcion, fecha: Date.now(), publicado: false, ruta: r.ruta, tipo: "video/mp4" });
+      anotar(`✔ Corto desde enlace: ${r.tema}` + (r.resumen ? " · " + r.resumen : ""));
+      paso("Listo: corto creado. Ve a Publicar.");
+      $("#cLink").value = "";
+    } catch (e) {
+      anotar(`✖ Enlace: ${e.message || e}`);
+      paso("No se pudo: " + (e.message || e));
+    }
+    $("#barra").style.width = "100%";
+    trabajando = false; $("#bCrear").disabled = false;
+    pintarCola();
+    return;
+  }
+
   const actx = new (window.AudioContext || window.webkitAudioContext)();
   await actx.resume();                                         // el sonido se habilita con el toque del botón
   trabajando = true; parar = false;
@@ -499,11 +877,16 @@ const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 async function abrir(id) {
   actual = await Videos.uno(id);
   if (!actual) return;
-  const ext = (actual.tipo || "").includes("mp4") ? "mp4" : "webm";
-  archivoActual = new File([actual.blob], `viralia_${etiqueta(actual.tema).slice(0, 24)}.${ext}`, { type: actual.tipo || "video/mp4" });
   const vid = $("#dVideo");
-  if (vid.src) URL.revokeObjectURL(vid.src);
-  vid.src = URL.createObjectURL(actual.blob);
+  if (vid.src && vid.src.startsWith("blob:")) URL.revokeObjectURL(vid.src);
+  if (actual.ruta) {                       // corto hecho desde un enlace: el archivo está en el teléfono
+    archivoActual = { ruta: actual.ruta };
+    vid.src = window.Capacitor.convertFileSrc("file://" + actual.ruta);
+  } else {
+    const ext = (actual.tipo || "").includes("mp4") ? "mp4" : "webm";
+    archivoActual = new File([actual.blob], `viralia_${etiqueta(actual.tema).slice(0, 24)}.${ext}`, { type: actual.tipo || "video/mp4" });
+    vid.src = URL.createObjectURL(actual.blob);
+  }
   $("#dCuenta").innerHTML = `Abre TikTok en <b>@${esc(actual.cuenta)}</b>, toca PUBLICAR EN TIKTOK y elige TikTok. La descripción ya queda copiada: pégala y publica.`;
   $("#dTexto").textContent = actual.descripcion;
   $("#cola").style.display = "none"; $("#resumen").style.display = "none"; $("#detalle").style.display = "block";
@@ -529,15 +912,26 @@ function aBase64(blob) {
 }
 async function compartirAndroid(file, texto) {
   const c = window.Capacitor;
-  const Filesystem = c.registerPlugin("Filesystem"), Share = c.registerPlugin("Share");
-  toast("Preparando el video…", 2000);
-  const r = await Filesystem.writeFile({ path: file.name, data: await aBase64(file), directory: "CACHE" });
-  await Share.share({ title: "VIRALIA", text: texto, files: [r.uri], dialogTitle: "Publicar en TikTok" });
+  const { Filesystem, Share } = c.Plugins;
+  if (file.ruta) {
+    await Share.share({ title: "VIRALIA", text: texto, files: ["file://" + file.ruta], dialogTitle: "Publicar en TikTok" });
+    return;
+  }
+  // por trozos: pasar 50 MB de una vez al sistema congela la app
+  const TROZO = 1536 * 1024;
+  for (let i = 0; i < file.size; i += TROZO) {
+    const datos = await aBase64(file.slice(i, i + TROZO));
+    if (i === 0) await Filesystem.writeFile({ path: file.name, data: datos, directory: "CACHE" });
+    else await Filesystem.appendFile({ path: file.name, data: datos, directory: "CACHE" });
+    toast(`Preparando el video… ${Math.round(i / file.size * 100)} %`, 1500);
+  }
+  const { uri } = await Filesystem.getUri({ path: file.name, directory: "CACHE" });
+  await Share.share({ title: "VIRALIA", text: texto, files: [uri], dialogTitle: "Publicar en TikTok" });
 }
 
 function copiar(t) {
   if (esAppAndroid()) {
-    try { window.Capacitor.registerPlugin("Clipboard").write({ string: t }); return; } catch (e) {}
+    try { window.Capacitor.Plugins.Clipboard.write({ string: t }); return; } catch (e) {}
   }
   try { navigator.clipboard.writeText(t); return; } catch (e) {}
   const a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select();
@@ -547,8 +941,8 @@ function copiar(t) {
 // ------------------------------------------------------------------ cuentas y ajustes
 function pintarCuentas() {
   const cs = LS.get("cuentas", []);
-  $("#cCuenta").innerHTML = cs.map((c, i) => `<option value="${i}">@${esc(c.nombre)} · ${NICHOS[c.nicho].icono} ${NICHOS[c.nicho].nombre}</option>`).join("")
-    || '<option value="-1">— añade una cuenta —</option>';
+  $("#cCuenta").innerHTML = '<option value="-1">La que tenga abierta en TikTok</option>' +
+    cs.map((c, i) => `<option value="${i}">@${esc(c.nombre)}</option>`).join("");
   const L = $("#listaCuentas");
   L.innerHTML = "<b>Tus cuentas</b>";
   if (!cs.length) L.innerHTML += '<p class="aviso">Aún no hay cuentas.</p>';
@@ -609,6 +1003,30 @@ function iniciar() {
   const nicho = $("#nNicho");
   nicho.innerHTML = Object.entries(NICHOS).map(([k, n]) => `<option value="${k}">${n.icono} ${n.nombre}</option>`).join("");
   pintarCuentas(); pintarLog(); pintarCola();
+
+  // Crear: categoría -> lista de temas (o automático, o escribir otro)
+  const cat = $("#cNicho"), tsel = $("#cTemaSel");
+  cat.innerHTML = Object.entries(NICHOS).map(([k, n]) => `<option value="${k}">${n.icono} ${n.nombre} (${(TEMAS[k] || []).length} temas)</option>`).join("");
+  cat.value = LS.get("ultima_categoria", "curiosos");
+  const pintarTemas = () => {
+    const lista = [...new Set(TEMAS[cat.value] || [])].sort((a, b) => a.localeCompare(b, "es"));
+    tsel.innerHTML = '<option value="__auto">🎲 Automático (VIRALIA elige)</option>' +
+      lista.map(t => `<option value="${esc(t)}">${esc(nombreTema(t))}</option>`).join("") +
+      '<option value="__otro">✍️ Escribir otro tema…</option>';
+    $("#cTema").style.display = "none";
+  };
+  cat.onchange = () => { LS.set("ultima_categoria", cat.value); pintarTemas(); };
+  tsel.onchange = () => { $("#cTema").style.display = tsel.value === "__otro" ? "block" : "none"; if (tsel.value === "__otro") $("#cTema").focus(); };
+  pintarTemas();
+  const modoSel = $("#cModo");
+  const pintarModo = () => {
+    const link = modoSel.value === "link";
+    $("#bloqueTema").style.display = link ? "none" : "block";
+    $("#bloqueLink").style.display = link ? "block" : "none";
+    $("#bloqueCant").style.display = link ? "none" : "block";
+  };
+  modoSel.onchange = pintarModo; pintarModo(); iniciarLink();
+  if (esAppAndroid()) Motor().actualizar().catch(() => {});      // tener yt-dlp al día (YouTube/TikTok cambian seguido)
 
   document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
     document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));

@@ -46,6 +46,13 @@ nav button{background:none;border-radius:0;color:var(--mu);font-size:12px;paddin
 nav button.on{color:var(--na)}nav button span{display:block;font-size:22px}
 .pag{display:none}.pag.on{display:block}
 #lienzo{display:none;width:auto;height:52vh;max-width:100%;margin:12px auto 0;border-radius:12px;background:#000}
+.recetasLk{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.recetasLk button{text-align:left;padding:10px;border:1px solid #333a5a;background:#0b0e1d;border-radius:12px;font-weight:600}
+.recetasLk button b{display:block;font-size:15px}.recetasLk button small{display:block;color:var(--mu);font-weight:400;font-size:11px;margin-top:2px}
+.recetasLk button.on{border-color:var(--na);box-shadow:0 0 0 1px var(--na)}
+.lkVista{position:relative;height:170px;margin-top:8px;border-radius:14px;border:2px solid #fff;background:linear-gradient(160deg,#6b4a37,#2a3550) center/contain no-repeat;
+  display:flex;align-items:flex-start;justify-content:center;padding-top:34px;overflow:hidden;aspect-ratio:9/16;max-width:100%}
+.lkVista span{font-weight:900;padding:2px 10px;border-radius:6px;text-align:center}
 #toast{position:fixed;left:14px;right:14px;bottom:calc(env(safe-area-inset-bottom) + 90px);background:#fff;color:#000;font-weight:700;
   padding:14px;border-radius:14px;text-align:center;display:none;z-index:9}
 #instalar{display:none}
@@ -62,12 +69,35 @@ nav button.on{color:var(--na)}nav button span{display:block;font-size:22px}
 <!-- CREAR -->
 <section class="pag on" id="p-crear">
   <div class="box">
-    <label>CUENTA</label><select id="cCuenta"></select>
-    <label>CONTENIDO</label>
-    <select id="cModo"><option value="datos">Datos curiosos (Wikipedia)</option><option value="noticias">Noticias del nicho</option></select>
-    <label>TEMA (vacío = lo elige VIRALIA)</label><input id="cTema" placeholder="ej: Pulpo, Área 51…">
-    <label>CUÁNTOS VIDEOS</label>
-    <select id="cCant"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select>
+    <label>¿CÓMO QUIERES CREAR?</label>
+    <select id="cModo"><option value="datos">📚 Datos curiosos (con voz y fotos)</option>
+      <option value="noticias">📰 Noticia reciente de la categoría</option>
+      <option value="link">🔗 Desde un enlace (YouTube / TikTok)</option></select>
+    <div id="bloqueTema">
+      <label>CATEGORÍA</label><select id="cNicho"></select>
+      <label>TEMA</label><select id="cTemaSel"></select>
+      <input id="cTema" placeholder="Escribe el tema (ej: Tiburón, Roma…)" style="display:none;margin-top:8px">
+    </div>
+    <div id="bloqueLink" style="display:none">
+      <label>PEGA EL ENLACE</label>
+      <input id="cLink" inputmode="url" autocapitalize="off" autocorrect="off" placeholder="https://youtu.be/…  o  https://www.tiktok.com/…">
+      <label>DURACIÓN DEL CORTO</label>
+      <select id="cDur"><option value="15">15 segundos</option><option value="20">20 segundos</option><option value="30">30 segundos</option><option value="45" selected>45 segundos</option><option value="60">60 segundos</option><option value="75">75 segundos</option><option value="90">90 segundos</option></select>
+      <label>TÍTULO EN PANTALLA (opcional)</label><input id="cTitulo" placeholder="Vacío = el título del video">
+      <label>RECETA</label><div class="recetasLk" id="lkReceta"></div>
+      <label>ESTILO (marco y color)</label><select id="lkEstilo"></select>
+      <div id="lkVista" class="lkVista"><span id="lkVistaTxt">ESTO CAMBIA TODO</span></div>
+      <label>TIPO DE LETRA</label><select id="lkFuente"></select>
+      <label>TAMAÑO DE LA LETRA <b id="lkTamN">110</b></label><input id="lkTam" type="range" min="50" max="160" value="110" style="padding:0">
+      <label>COLOR DE LA LETRA</label><input id="lkColor" type="color" value="#FFE600" style="height:46px;padding:4px">
+      <label>ENCUADRE VERTICAL</label>
+      <select id="lkEncuadre"><option value="completa">Pantalla completa (llena todo el vertical)</option><option value="blur">Con fondo difuminado</option></select>
+      <label class="aviso" style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="lkMejores" checked style="width:auto"> Elegir los mejores momentos (por volumen y acción)</label>
+      <p class="aviso">Una transición cada 3 segundos y los videos horizontales se vuelven verticales. Usa videos tuyos o con permiso del autor.</p>
+    </div>
+    <label>CUENTA (opcional, para ordenar tus videos)</label><select id="cCuenta"></select>
+    <div id="bloqueCant"><label>CUÁNTOS VIDEOS</label>
+    <select id="cCant"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></div>
   </div>
   <button class="pri" id="bCrear">✨ CREAR VIDEOS</button>
   <div class="box" id="progreso" style="display:none;margin-top:12px">
