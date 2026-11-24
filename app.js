@@ -270,7 +270,7 @@ async function guionWiki(tema, nicho, gancho) {
   paso(`Buscando ${tema} en Wikipedia…`);
   const a = await articulo(tema);
   if (!a) throw new Error(`No encontré ${tema} en Wikipedia.`);
-  const fs = mejores(frases(a.texto), 6);
+  const fs = mejores(frases(a.texto), 8);
   if (fs.length < 6) throw new Error(`${a.titulo}: no hay suficientes datos verificables.`);
   // nombre que entiende la gente: el tema pedido ("Pulpo"), no el título científico del artículo ("Octopoda")
   const nombre = nombreTema(gancho ? a.titulo : tema);
@@ -476,7 +476,10 @@ async function montar(guion, actx) {
     audios.push(await hablar(guion.escenas[i], actx));
   }
   const sr = actx.sampleRate, hueco = Math.round(PAUSA * sr);
-  const largo = audios.reduce((s, a) => s + a.length + hueco, 0);
+  const MINIMO_S = 64;                                  // regla fija: todo video dura MAS de 1 minuto
+  const base = audios.reduce((s, a) => s + a.length + hueco, 0);
+  const extra = Math.max(0, Math.ceil(MINIMO_S * sr - base));      // si la voz dura menos, el cierre se alarga con una pausa
+  const largo = base + extra;
   const pista = actx.createBuffer(1, largo, sr);
   const datos = pista.getChannelData(0);
   const escenas = [];
@@ -486,6 +489,7 @@ async function montar(guion, actx) {
     escenas.push({ texto: guion.escenas[i], inicio: cursor / sr, duracion: (a.length + hueco) / sr });
     cursor += a.length + hueco;
   });
+  if (extra) escenas[escenas.length - 1].duracion += extra / sr;
   const total = largo / sr;
 
   // 2) fotos
@@ -638,6 +642,7 @@ function mejoresMomentos(en, dur, n, D, antes) {
 
 async function crearDesdeLink(url, dur, tituloPedido, c, op) {
   if (!esAppAndroid()) throw new Error("Crear desde un enlace solo funciona en la app de Android (APK).");
+  dur = Math.max(65, dur);                                  // regla fija: todo video dura MAS de 1 minuto
   paso("Descargando el video del enlace…");
   const d = await Motor().descargar({ url });
   try {
