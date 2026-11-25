@@ -1,10 +1,11 @@
 import { ESTILOS, estilo, filtro, marcoPNG, marcoURL } from "./estilos.js";
+import { iniciarCrecer } from "./crecer.js";
 // VIRALIA para el teléfono: crea los videos DENTRO del teléfono con su conexión (Wi-Fi o datos).
 // Wikipedia (texto + fotos) · noticias (GDELT) · NASA · Pexels/Pixabay opcionales -> guion -> voz (Piper, en el teléfono)
 // -> video vertical 1080x1920 con cortes cada 3 s y subtítulos -> se guarda en el teléfono -> botón "Publicar en TikTok".
 
 const TTS_URL = "https://cdn.jsdelivr.net/npm/@mintplex-labs/piper-tts-web@1.0.5/+esm";
-const W = 1080, H = 1920, CORTE = 3, PAUSA = 0.25;
+const W = 1080, H = 1920, CORTE = 3, PAUSA = 0.38;          // pausa natural entre frases
 const $ = s => document.querySelector(s);
 
 // ------------------------------------------------------------------ guardado
@@ -60,6 +61,7 @@ const NICHOS = {
   comida: { nombre: "Comida", icono: "🍫", tags: ["comida", "curiosidades"], noticias: "comida curiosidad" },
   deportes: { nombre: "Deportes", icono: "⚽", tags: ["deportes", "futbol"], noticias: "récord deportivo" },
   famosos: { nombre: "Personajes históricos", icono: "👑", tags: ["historia", "personajes"], noticias: "historia personaje" },
+  gta6: { nombre: "GTA 6 y videojuegos", icono: "🎮", tags: ["gta6", "gtavi", "videojuegos", "gaming"], noticias: "GTA 6 Rockstar" },
 };
 const TEMAS_EXTRA = {
   terror: ["Llorona", "Chupacabras", "Bruja de Blair", "Drácula", "Vampiro", "Hombre lobo", "Isla de las Muñecas", "Poveglia",
@@ -122,6 +124,9 @@ const TEMAS = {
 };
 
 Object.assign(TEMAS, TEMAS_EXTRA);
+TEMAS.gta6 = ["Grand Theft Auto VI", "Grand Theft Auto V", "Rockstar Games", "Grand Theft Auto: Vice City", "Grand Theft Auto: San Andreas",
+  "Grand Theft Auto IV", "Grand Theft Auto (serie)", "Red Dead Redemption 2", "Rockstar North", "Grand Theft Auto Online",
+  "Videojuego de mundo abierto", "Miami", "Cayos de la Florida", "Take-Two Interactive", "Grand Theft Auto III", "Minecraft", "Roblox", "Fortnite"];
 TEMAS.ovnis.push("Extraterrestre", "Abducción", "Encuentro cercano", "Proyecto Blue Book", "Marfa lights", "Avistamiento ovni de 1561 en Núremberg");
 TEMAS.animales.push("Pulpo de anillos azules", "Pez globo", "Axolote", "Mantis religiosa", "Lobo marino", "Orca", "Panda gigante",
   "León", "Tigre", "Águila real", "Cóndor andino", "Jaguar", "Anaconda", "Piraña", "Escorpión", "Tarántula", "Luciérnaga", "Pez abisal");
@@ -307,9 +312,17 @@ async function sesionVoz() {
   return _sesion;
 }
 
+/** Texto mas facil de leer con naturalidad: sin MAYUSCULAS gritadas ni simbolos, con la pausa justa al final. */
+function natural(texto) {
+  let t = String(texto || "").replace(/\.{2,}/g, "…");
+  t = t.replace(/\b([A-ZÁÉÍÓÚÑ]{4,})\b/g, m => m[0] + m.slice(1).toLowerCase());
+  t = t.replace(/[#*_~^|<>\[\]{}"“”]/g, " ").replace(/\s*([,;:!?])\s*/g, "$1 ").replace(/\s+/g, " ").trim();
+  if (t && !/[.!?…]$/.test(t)) t += t.includes("¿") && !t.includes("?") ? "?" : ".";
+  return t;
+}
 async function hablar(texto, actx) {
   const s = await sesionVoz();
-  const wav = await s.predict(texto);
+  const wav = await s.predict(natural(texto));
   return actx.decodeAudioData(await wav.arrayBuffer());
 }
 
@@ -328,6 +341,38 @@ async function cargarFoto(url) {
     g.drawImage(bmp, (c.width - w) / 2, (c.height - h) / 2, w, h);
     bmp.close && bmp.close();
     return c;
+  } catch (e) { return null; }
+}
+
+// ------------------------------------------------------------------ miniatura (portada) de cada video
+/** Fotograma o foto + titulo grande abajo -> JPG 1080x1920 (portada para TikTok). */
+async function miniatura(fuente, titulo) {
+  try {
+    const c = Object.assign(document.createElement("canvas"), { width: W, height: H }), g = c.getContext("2d");
+    g.fillStyle = "#000"; g.fillRect(0, 0, W, H);
+    if (fuente) {
+      const fw = fuente.width || fuente.videoWidth, fh = fuente.height || fuente.videoHeight;
+      const sc = Math.max(W / fw, H / fh); g.drawImage(fuente, (W - fw * sc) / 2, (H - fh * sc) / 2, fw * sc, fh * sc);
+    }
+    const sombra = g.createLinearGradient(0, H / 2, 0, H); sombra.addColorStop(0, "rgba(0,0,0,0)"); sombra.addColorStop(1, "rgba(0,0,0,.92)");
+    g.fillStyle = sombra; g.fillRect(0, H / 2, W, H / 2);
+    let tam = 120; const t = String(titulo || "").toUpperCase();
+    let lineas;
+    do { g.font = `900 ${tam}px sans-serif-black, sans-serif`; lineas = envolver(g, t, W - 120).slice(0, 4); tam -= 6; }
+    while (tam > 50 && lineas.some(l => g.measureText(l).width > W - 120));
+    tam += 6; let y = H - 260 - lineas.length * (tam + 14);
+    g.textAlign = "center"; g.textBaseline = "top"; g.lineJoin = "round";
+    for (const l of lineas) { g.lineWidth = tam / 6; g.strokeStyle = "#000"; g.strokeText(l, W / 2, y); g.fillStyle = "#fff"; g.fillText(l, W / 2, y); y += tam + 14; }
+    return await new Promise(ok => c.toBlob(ok, "image/jpeg", 0.9));
+  } catch (e) { return null; }
+}
+/** Fotograma de un video del telefono (corto hecho desde un enlace) para la miniatura. */
+async function fotogramaDe(ruta, seg) {
+  try {
+    const sal = ruta.replace(/\.mp4$/, "_cuadro.jpg");
+    await Motor().ffmpeg({ args: ["-hide_banner", "-y", "-ss", String(seg), "-i", ruta, "-frames:v", "1", sal] });
+    const img = new Image(); img.src = window.Capacitor.convertFileSrc("file://" + sal);
+    await img.decode(); return img;
   } catch (e) { return null; }
 }
 
@@ -568,6 +613,7 @@ const RECETAS = {
   cine: { nombre: "Cine", desc: "Color de película, bordes oscuros y texto en caja.", estilo: "color_cine", caja: "#000000", fijo: true, tam: 70, color: "#FFFFFF" },
   noticia: { nombre: "Noticia", desc: "Frases en caja azul, imagen sin tocar.", estilo: "noti_oceano", caja: "#1E64C8", fijo: true, tam: 76, color: "#FFFFFF" },
   limpio: { nombre: "Limpio", desc: "Texto pequeño y nada más.", estilo: "ninguno", caja: false, fijo: true, tam: 56, color: "#FFFFFF" },
+  gta6: { nombre: "GTA 6 Clipping", desc: "Tráilers y gameplay con gancho, letras grandes y marco de Vice City.", estilo: "gta_4", caja: false, fijo: false, tam: 118, color: "#FFFFFF" },
 };
 
 const rr = (g, x, y, w, h, r) => { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h); };
@@ -801,8 +847,10 @@ async function crear() {
     $("#bCrear").disabled = true; $("#progreso").style.display = "block"; $("#barra").style.width = "10%";
     try {
       const r = await crearDesdeLink(url, +$("#cDur").value, $("#cTitulo").value.trim(), c, opcionesLink());
+      paso("Creando la miniatura…");
+      const mini = await miniatura(await fotogramaDe(r.ruta, 6), r.tema);
       await Videos.guardar({ id: Date.now() + "_" + Math.random().toString(36).slice(2, 7), cuenta: c.nombre, tema: r.tema,
-        descripcion: r.descripcion, fecha: Date.now(), publicado: false, ruta: r.ruta, tipo: "video/mp4" });
+        descripcion: r.descripcion, fecha: Date.now(), publicado: false, ruta: r.ruta, tipo: "video/mp4", mini });
       anotar(`✔ Corto desde enlace: ${r.tema}` + (r.resumen ? " · " + r.resumen : ""));
       paso("Listo: corto creado. Ve a Publicar.");
       $("#cLink").value = "";
@@ -839,8 +887,9 @@ async function crear() {
         marcarUsado(tema, c.nicho);
       }
       const blob = await montar(guion, actx);
+      const mini = await miniatura(await cargarFoto(guion.fotos[0]), guion.titulo);
       await Videos.guardar({ id: Date.now() + "_" + Math.random().toString(36).slice(2, 7), cuenta: c.nombre, tema: guion.tema,
-        descripcion: guion.descripcion, fecha: Date.now(), publicado: false, blob, tipo: blob.type });
+        descripcion: guion.descripcion, fecha: Date.now(), publicado: false, blob, tipo: blob.type, mini });
       hechos++;
       anotar(`✔ @${c.nombre}: ${guion.tema}`);
     } catch (e) {
@@ -894,6 +943,10 @@ async function abrir(id) {
   }
   $("#dCuenta").innerHTML = `Abre TikTok en <b>@${esc(actual.cuenta)}</b>, toca PUBLICAR EN TIKTOK y elige TikTok. La descripción ya queda copiada: pégala y publica.`;
   $("#dTexto").textContent = actual.descripcion;
+  const mi = $("#dMini");
+  if (mi.src && mi.src.startsWith("blob:")) URL.revokeObjectURL(mi.src);
+  mi.style.display = actual.mini ? "block" : "none"; $("#bMini").style.display = actual.mini ? "block" : "none";
+  if (actual.mini) mi.src = URL.createObjectURL(actual.mini);
   $("#cola").style.display = "none"; $("#resumen").style.display = "none"; $("#detalle").style.display = "block";
   window.scrollTo(0, 0);
 }
@@ -914,6 +967,29 @@ function aBase64(blob) {
     r.onerror = () => mal(r.error);
     r.readAsDataURL(blob);
   });
+}
+/** Copia el video al telefono (si esta guardado dentro de la app) y devuelve su ruta. */
+async function rutaEnTelefono(file) {
+  if (file.ruta) return file.ruta;
+  const { Filesystem } = window.Capacitor.Plugins;
+  const TROZO = 1536 * 1024;
+  for (let i = 0; i < file.size; i += TROZO) {
+    const datos = await aBase64(file.slice(i, i + TROZO));
+    if (i === 0) await Filesystem.writeFile({ path: file.name, data: datos, directory: "CACHE" });
+    else await Filesystem.appendFile({ path: file.name, data: datos, directory: "CACHE" });
+    toast(`Preparando el video… ${Math.round(i / file.size * 100)} %`, 1500);
+  }
+  const { uri } = await Filesystem.getUri({ path: file.name, directory: "CACHE" });
+  return uri.replace(/^file:\/\//, "");
+}
+/** Abre el video directamente en la app de TikTok del telefono (la cuenta vinculada es la que tenga abierta TikTok). */
+async function publicarEnTikTok(file, texto) {
+  const ruta = await rutaEnTelefono(file);
+  try { await Motor().tiktok({ ruta, texto }); return "tiktok"; }
+  catch (e) {                                    // TikTok no instalado o version antigua: menu de compartir
+    await window.Capacitor.Plugins.Share.share({ title: "VIRALIA", text: texto, files: ["file://" + ruta], dialogTitle: "Publicar en TikTok" });
+    return "compartir";
+  }
 }
 async function compartirAndroid(file, texto) {
   const c = window.Capacitor;
@@ -944,7 +1020,17 @@ function copiar(t) {
 }
 
 // ------------------------------------------------------------------ cuentas y ajustes
+async function estadoTikTok() {
+  const e = $("#ttEstado"); if (!e) return;
+  if (!esAppAndroid()) { e.innerHTML = "En el iPhone se publica con el botón compartir → TikTok."; return; }
+  try {
+    const r = await Motor().tiktokEstado();
+    e.innerHTML = r.instalado ? "✅ <b>TikTok vinculado</b>: VIRALIA abre tu app de TikTok directamente en la pantalla de publicar, con la cuenta que tengas abierta en ella."
+                              : "⚠️ No encontré la app de TikTok en este teléfono. Instálala e inicia sesión; mientras tanto se usa el menú de compartir.";
+  } catch (x) { e.textContent = "No pude comprobar TikTok: " + (x.message || x); }
+}
 function pintarCuentas() {
+  estadoTikTok();
   const cs = LS.get("cuentas", []);
   $("#cCuenta").innerHTML = '<option value="-1">La que tenga abierta en TikTok</option>' +
     cs.map((c, i) => `<option value="${i}">@${esc(c.nombre)}</option>`).join("");
@@ -1005,6 +1091,19 @@ function candado() {
 // ------------------------------------------------------------------ arranque
 function iniciar() {
   candado();
+  // lo que usan las pestañas Crecer y Aprender
+  window.VIRALIA = {
+    guion: async idea => {                          // solo el texto del guion (no necesita fotos)
+      const a = await articulo(idea);
+      if (!a) throw new Error(`No encontré «${idea}» en Wikipedia.`);
+      const fs = mejores(frases(a.texto), 12);
+      if (fs.length < 5) throw new Error(`${a.titulo}: no hay suficientes datos verificables.`);
+      const nombre = nombreTema(idea.length <= 40 ? idea : a.titulo);
+      return { tema: nombre, titulo: `${fs.length} datos de ${nombre}`, escenas: [azar(GANCHOS)(nombre, fs.length), ...fs, azar(CIERRES)] };
+    },
+    copiar, toast,
+  };
+  iniciarCrecer();
   const nicho = $("#nNicho");
   nicho.innerHTML = Object.entries(NICHOS).map(([k, n]) => `<option value="${k}">${n.icono} ${n.nombre}</option>`).join("");
   pintarCuentas(); pintarLog(); pintarCola();
@@ -1057,7 +1156,11 @@ function iniciar() {
     if (!archivoActual) return;
     copiar(actual.descripcion);
     if (esAppAndroid()) {
-      try { await compartirAndroid(archivoActual, actual.descripcion); toast("Pega la descripción en TikTok y publica. Luego toca YA LO PUBLIQUÉ.", 4500); }
+      try {
+        const como = await publicarEnTikTok(archivoActual, actual.descripcion);
+        toast(como === "tiktok" ? "Se abrió TikTok con tu video: pega la descripción, elige la portada y publica. Luego toca YA LO PUBLIQUÉ."
+                                : "Elige TikTok, pega la descripción y publica. Luego toca YA LO PUBLIQUÉ.", 5500);
+      }
       catch (e) { if (!/cancel/i.test(String(e && e.message))) toast("No se pudo compartir: " + (e.message || e), 4500); }
       return;
     }
@@ -1068,6 +1171,23 @@ function iniciar() {
     catch (e) { if (e.name !== "AbortError") toast("No se pudo compartir: " + e.message, 4500); }
   };
   $("#bCopiar").onclick = () => { if (actual) { copiar(actual.descripcion); toast("Descripción copiada"); } };
+  $("#bMini").onclick = async () => {                 // la miniatura se guarda/comparte para elegirla como portada en TikTok
+    if (!actual || !actual.mini) return;
+    const nombre = `portada_${etiqueta(actual.tema).slice(0, 24)}.jpg`;
+    try {
+      if (esAppAndroid()) {
+        const { Filesystem, Share } = window.Capacitor.Plugins;
+        await Filesystem.writeFile({ path: nombre, data: await aBase64(actual.mini), directory: "CACHE" });
+        const { uri } = await Filesystem.getUri({ path: nombre, directory: "CACHE" });
+        await Share.share({ title: "Miniatura VIRALIA", files: [uri], dialogTitle: "Guardar la miniatura" });
+      } else {
+        const f = new File([actual.mini], nombre, { type: "image/jpeg" });
+        if (navigator.canShare && navigator.canShare({ files: [f] })) await navigator.share({ files: [f] });
+        else { const a = document.createElement("a"); a.href = URL.createObjectURL(f); a.download = nombre; a.click(); }
+      }
+      toast("Guárdala en tu galería y en TikTok elígela en «Editar portada».", 4500);
+    } catch (e) { if (!/cancel|abort/i.test(String(e && (e.message || e.name)))) toast("No se pudo guardar: " + (e.message || e), 4000); }
+  };
   $("#bBorrar").onclick = async () => {
     if (actual && confirm("¿Borrar este video? (no se publica)")) { await Videos.borrar(actual.id); cerrarDetalle(); toast("Borrado"); }
   };

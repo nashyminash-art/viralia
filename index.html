@@ -7,49 +7,49 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="VIRALIA">
-<meta name="theme-color" content="#05070f">
+<meta name="theme-color" content="#000000">
 <link rel="apple-touch-icon" href="icono-180.png">
 <link rel="icon" href="icono-180.png">
 <link rel="manifest" href="manifest.webmanifest">
 <title>VIRALIA</title>
 <style>
-:root{--bg:#05070f;--card:#11152a;--card2:#1b1f33;--tx:#eef;--mu:#99a;--na:#ff8a00;--vi:#a24bff;--ok:#2ecc71;--er:#ff5a6a}
+:root{--bg:#000;--card:#0b0b0b;--card2:#171717;--tx:#fafafa;--mu:#8c8c8c;--na:#ffffff;--vi:#ffffff;--ok:#ffffff;--er:#ff6b6b;--bd:#232323}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg)}
 body{margin:0;color:var(--tx);font:16px -apple-system,system-ui,sans-serif;
   padding:calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 84px)}
 header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 header img{width:42px;height:42px;border-radius:11px}
-h1{font-size:24px;margin:0;letter-spacing:.5px}h1 span{color:var(--vi)}
+h1{font-size:24px;margin:0;letter-spacing:.5px}h1 span{color:var(--mu);font-weight:300}
 header small{display:block;color:var(--mu);font-size:11px;letter-spacing:2px}
 h2{font-size:18px;margin:18px 2px 8px}
-.box{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px}
+.box{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px;margin-bottom:12px}
 label{display:block;font-size:12px;font-weight:700;color:var(--mu);margin:10px 0 4px;letter-spacing:.5px}
-select,input{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px solid #333a5a;background:#0b0e1d;color:#fff}
-button{font:inherit;font-weight:800;border:0;border-radius:13px;padding:14px 10px;width:100%;cursor:pointer;color:#fff;background:var(--card2)}
-button.pri{color:#000;background:linear-gradient(90deg,var(--na),var(--vi))}
-button.ok{background:var(--ok);color:#000}button.no{background:#2a1820;color:var(--er)}
+select,input,textarea{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px solid var(--bd);background:#050505;color:#fff}
+button{font:inherit;font-weight:800;border:1px solid var(--bd);border-radius:13px;padding:14px 10px;width:100%;cursor:pointer;color:#fff;background:var(--card2)}
+button.pri{color:#000;background:#fff;border-color:#fff}
+button.ok{background:#fff;color:#000}button.no{background:#140808;color:var(--er);border-color:#3a1515}
 button:disabled{opacity:.45}
 .fila{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .aviso{font-size:14px;color:var(--mu);line-height:1.45}
-.barra{height:10px;border-radius:6px;background:#0b0e1d;overflow:hidden;margin:8px 0}
-.barra i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--na),var(--vi));transition:width .3s}
+.barra{height:10px;border-radius:6px;background:#1a1a1a;overflow:hidden;margin:8px 0}
+.barra i{display:block;height:100%;width:0;background:#fff;transition:width .3s}
 #log{font-size:12px;color:var(--mu);max-height:180px;overflow:auto;white-space:pre-wrap}
 video{width:100%;max-height:64vh;border-radius:12px;background:#000;display:block;margin-bottom:10px}
-.txt{white-space:pre-wrap;font-size:14px;color:#cdd;background:#0b0e1d;border-radius:10px;padding:10px;margin-bottom:10px}
-.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #222842}
-.item:last-child{border:0}.item b{display:block}.item small{color:var(--mu)}
+.txt{white-space:pre-wrap;font-size:14px;color:#ddd;background:#050505;border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:10px}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--bd)}
+.item:last-child{border:0}.item b{display:block}.item small{color:var(--mu);line-height:1.4}
 .item button{width:auto;padding:10px 14px}
-nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:#0b0e1dee;backdrop-filter:blur(12px);
-  border-top:1px solid #222842;padding-bottom:env(safe-area-inset-bottom)}
-nav button{background:none;border-radius:0;color:var(--mu);font-size:12px;padding:10px 4px}
-nav button.on{color:var(--na)}nav button span{display:block;font-size:22px}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:#000000ee;backdrop-filter:blur(12px);
+  border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom)}
+nav button{background:none;border:0;border-radius:0;color:var(--mu);font-size:10.5px;padding:9px 2px;font-weight:700}
+nav button.on{color:#fff}nav button.on span{transform:scale(1.12)}nav button span{display:block;font-size:20px;transition:transform .15s}
 .pag{display:none}.pag.on{display:block}
 #lienzo{display:none;width:auto;height:52vh;max-width:100%;margin:12px auto 0;border-radius:12px;background:#000}
 .recetasLk{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.recetasLk button{text-align:left;padding:10px;border:1px solid #333a5a;background:#0b0e1d;border-radius:12px;font-weight:600}
+.recetasLk button{text-align:left;padding:10px;border:1px solid var(--bd);background:#050505;border-radius:12px;font-weight:600}
 .recetasLk button b{display:block;font-size:15px}.recetasLk button small{display:block;color:var(--mu);font-weight:400;font-size:11px;margin-top:2px}
-.recetasLk button.on{border-color:var(--na);box-shadow:0 0 0 1px var(--na)}
+.recetasLk button.on{border-color:#fff;box-shadow:0 0 0 1px #fff}
 .lkVista{position:relative;height:170px;margin-top:8px;border-radius:14px;border:2px solid #fff;background:linear-gradient(160deg,#6b4a37,#2a3550) center/contain no-repeat;
   display:flex;align-items:flex-start;justify-content:center;padding-top:34px;overflow:hidden;aspect-ratio:9/16;max-width:100%}
 .lkVista span{font-weight:900;padding:2px 10px;border-radius:6px;text-align:center}
@@ -120,6 +120,8 @@ nav button.on{color:var(--na)}nav button span{display:block;font-size:22px}
     <video id="dVideo" controls playsinline></video>
     <div class="aviso" id="dCuenta" style="margin-bottom:8px"></div>
     <div class="txt" id="dTexto"></div>
+    <img id="dMini" alt="Miniatura" style="display:none;width:42%;border-radius:12px;border:1px solid var(--bd);margin:0 0 10px">
+    <button id="bMini" style="display:none;margin-bottom:8px">🖼 Guardar miniatura (para la portada)</button>
     <button class="pri" id="bPublicar">📲 PUBLICAR EN TIKTOK</button>
     <div class="fila" style="margin-top:8px"><button id="bCopiar">📋 Copiar texto</button><button class="no" id="bBorrar">🗑 Borrar</button></div>
     <button class="ok" id="bHecho" style="margin-top:8px">✔ YA LO PUBLIQUÉ</button>
@@ -127,15 +129,52 @@ nav button.on{color:var(--na)}nav button span{display:block;font-size:22px}
   </div>
 </section>
 
+<!-- CRECER -->
+<section class="pag" id="p-crecer">
+  <div class="box">
+    <b>🎯 Cazador de nichos</b>
+    <p class="aviso">Canales pequeños de YouTube Shorts cuyos videos ya están petando (muchas más vistas que seguidores).</p>
+    <input id="czQ" placeholder="Tema (ej: historias bíblicas, misterios, GTA 6)">
+    <div class="fila" style="margin-top:8px"><button class="pri" id="bCazar">BUSCAR NICHOS</button><button id="bCazarGta">🎮 GTA 6</button></div>
+    <div id="czRes"></div>
+  </div>
+  <div class="box">
+    <b>🪝 Puntuar ganchos</b>
+    <p class="aviso">Escribe un gancho por línea (lo que dices en los primeros 3 segundos).</p>
+    <textarea id="gnTexto" rows="3" placeholder="Lo que casi nadie te cuenta del pulpo"></textarea>
+    <button id="bPuntuar" style="margin-top:8px">PUNTUAR</button><div id="gnRes"></div>
+  </div>
+  <div class="box">
+    <b>🧪 Reels de prueba</b>
+    <p class="aviso">10 ganchos distintos del mismo tema para probar cuál retiene más.</p>
+    <input id="prTema" placeholder="Tema (ej: el pulpo)"><button id="bPruebas" style="margin-top:8px">PREPARAR 10 PRUEBAS</button><div id="prRes"></div>
+  </div>
+  <div class="box"><b>📚 Estrategias para monetizar</b><div id="estrat"></div>
+    <p class="aviso">Resumen de los perfiles de referencia; no es consejo financiero ni garantiza ingresos.</p></div>
+</section>
+
+<!-- APRENDER -->
+<section class="pag" id="p-aprender">
+  <div class="box">
+    <b>✍️ Guionista</b>
+    <p class="aviso">Escribe una idea o tema: VIRALIA busca datos reales en Wikipedia y te arma el guion (gancho, datos y cierre).</p>
+    <input id="gdIdea" placeholder="Tu idea (ej: Grand Theft Auto VI, Pulpo, Área 51)">
+    <button class="pri" id="bGuion" style="margin-top:8px">ESCRIBIR GUION</button><div id="gdRes"></div>
+  </div>
+  <div class="box"><b>🎓 Curso exprés</b><div id="curso"></div></div>
+  <div class="box"><b>✅ Plan de los primeros 7 días</b><div id="plan7"></div></div>
+</section>
+
 <!-- CUENTAS -->
 <section class="pag" id="p-cuentas">
+  <div class="box aviso" id="ttEstado">Comprobando TikTok…</div>
   <div class="box" id="listaCuentas"></div>
   <div class="box">
     <b>Añadir cuenta</b>
     <label>USUARIO DE TIKTOK (sin @)</label><input id="nNombre" autocapitalize="off" autocorrect="off" placeholder="ej: mi_cuenta">
     <label>NICHO</label><select id="nNicho"></select>
     <button class="pri" id="bAnadir" style="margin-top:12px">AÑADIR CUENTA</button>
-    <p class="aviso">VIRALIA publica en la cuenta que tengas abierta en tu app de TikTok. Nunca pide contraseñas.</p>
+    <p class="aviso">VIRALIA publica en la cuenta que tengas abierta en tu app de TikTok (la cuenta vinculada). Para usar otra cuenta, cámbiala dentro de TikTok. Nunca pide contraseñas.</p>
   </div>
 </section>
 
@@ -145,7 +184,7 @@ nav button.on{color:var(--na)}nav button span{display:block;font-size:22px}
     <b>Voz</b>
     <label>VOZ EN ESPAÑOL (se descarga una vez, ~63 MB)</label>
     <select id="aVoz">
-      <option value="es_MX-claude-high">México · Claude (alta calidad)</option>
+      <option value="es_MX-claude-high">México · Claude (la más natural, recomendada)</option>
       <option value="es_MX-ald-medium">México · Ald</option>
       <option value="es_ES-davefx-medium">España · Dave</option>
       <option value="es_ES-sharvard-medium">España · Sharvard</option>
@@ -169,6 +208,8 @@ nav button.on{color:var(--na)}nav button span{display:block;font-size:22px}
 <nav>
   <button class="on" data-p="crear"><span>✨</span>Crear</button>
   <button data-p="publicar"><span>📲</span>Publicar</button>
+  <button data-p="crecer"><span>📈</span>Crecer</button>
+  <button data-p="aprender"><span>🎓</span>Aprender</button>
   <button data-p="cuentas"><span>👥</span>Cuentas</button>
   <button data-p="ajustes"><span>⚙️</span>Ajustes</button>
 </nav>

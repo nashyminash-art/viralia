@@ -12,6 +12,9 @@ export const FILTROS = {
   vhs: "eq=saturation=1.3:contrast=1.08",
   sepia: "colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131,eq=contrast=1.1",
   oro: "eq=contrast=1.08:saturation=1.05,colorbalance=rs=0.05:gs=0.03:bs=-0.08:rh=0.06:gh=0.04",
+  gta: "eq=contrast=1.14:saturation=1.45,colorbalance=rs=0.07:gs=0.02:bs=-0.07:rh=0.06:bh=-0.03,vignette=PI/6",
+  gta_neon: "eq=contrast=1.14:saturation=1.5,colorbalance=rs=0.06:bs=0.08:rh=0.05:bh=0.05,vignette=PI/6",
+  bloques: "eq=contrast=1.1:saturation=1.6,unsharp=5:5:0.8",
 };
 
 const L = [];
@@ -53,6 +56,16 @@ add("neon_atardecer", "Atardecer neón", "Atardecer neón", "neon", "calido", { 
 add("neon_atardecer_2", "Atardecer neón rosa", "Atardecer neón", "neon", "calido", { c1: "#FF2E88" });
 add("pantano_1", "Pantano", "Pantano", "pantano", "camara");
 add("pantano_2", "Pantano oscuro", "Pantano", "pantano", "cine");
+add("gta_1", "GTA 6 · atardecer de Vice City", "GTA 6 · videojuego", "gta", "gta", { c1: "#FFC83D" });
+add("gta_2", "GTA 6 · neón nocturno", "GTA 6 · videojuego", "gta", "gta_neon", { c1: "#FF2E88" });
+add("gta_3", "GTA 6 · dinero verde", "GTA 6 · videojuego", "gta", "gta", { c1: "#78FF82" });
+add("gta_4", "GTA 6 · atardecer synthwave (Vice City)", "GTA 6 · videojuego", "vicecity", "gta_neon");
+add("bloques_1", "Bloques de juguete · clásico", "Bloques (Lego/Roblox)", "bloques", "bloques");
+add("bloques_2", "Bloques · mundo de bloques", "Bloques (Lego/Roblox)", "bloques", "bloques", { cols: ["#2EC24A", "#8B5A2B", "#FFC83D", "#2B7BFF"] });
+add("bloques_3", "Bloques · neón", "Bloques (Lego/Roblox)", "bloques", "neon", { cols: ["#FF2E88", "#00E5FF", "#B6FF3B", "#A24BFF"] });
+// GTA 6 y Bloques primero en las listas
+L.sort((a, b) => (/GTA/.test(b.grupo) ? 2 : /Bloques/.test(b.grupo) ? 1 : 0) - (/GTA/.test(a.grupo) ? 2 : /Bloques/.test(a.grupo) ? 1 : 0) || 0);
+L.unshift(...L.splice(L.findIndex(e => e.id === "ninguno"), 1));
 export const ESTILOS = L;
 export const estilo = id => L.find(e => e.id === id) || L[0];
 export const filtro = id => FILTROS[estilo(id).filtro] || "";
@@ -155,6 +168,60 @@ const D = {
     [[22, e.c1], [44, e.c2], [66, e.c1]].forEach(([m, c]) => { g.strokeStyle = c; g.lineWidth = 6; rr(g, m, m, W - 2 * m, H - 2 * m, 10); g.stroke(); });
     for (const x of [W / 4, W / 2, 3 * W / 4]) for (const r of [130, 95, 60]) { g.strokeStyle = r === 95 ? e.c2 : e.c1; g.lineWidth = 6; g.beginPath(); g.arc(x, 0, r, 0, Math.PI); g.stroke(); }
     g.fillStyle = "rgba(10,10,25,.82)"; g.fillRect(0, H - 190, W, 70); txt(g, (t || "VERANO · PLAYA").toUpperCase().slice(0, 28), W / 2, H - 155, 44, e.c2);
+  },
+  gta(g, e, t, cuenta) {          // HUD de videojuego de mundo abierto: minimapa, dinero, estrellas y misión
+    const cx = 190, cy = 330, r = 120;
+    g.fillStyle = "rgba(0,0,0,.8)"; g.beginPath(); g.arc(cx, cy, r + 8, 0, 7); g.fill();
+    g.fillStyle = "rgba(30,40,55,.92)"; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fill();
+    g.strokeStyle = BL; g.lineWidth = 5; g.stroke();
+    g.strokeStyle = "#5a697d"; g.lineWidth = 6;
+    for (const k of [-60, 0, 60]) { g.beginPath(); g.moveTo(cx - r + 14, cy + k); g.lineTo(cx + r - 14, cy + k); g.moveTo(cx + k, cy - r + 14); g.lineTo(cx + k, cy + r - 14); g.stroke(); }
+    g.fillStyle = BL; g.beginPath(); g.moveTo(cx, cy - 24); g.lineTo(cx - 16, cy + 14); g.lineTo(cx + 16, cy + 14); g.fill();
+    fillRR(g, cx - r, cy + r + 18, 2 * r, 16, 0, "rgba(0,0,0,.8)"); fillRR(g, cx - r, cy + r + 18, 2 * r - 40, 16, 0, "#46C85A");
+    fillRR(g, cx - r, cy + r + 38, 2 * r, 12, 0, "rgba(0,0,0,.8)"); fillRR(g, cx - r, cy + r + 38, 2 * r - 90, 12, 0, "#5096FF");
+    const dinero = "$ " + [1000000, 250000, 5000000, 999999][Math.floor(Math.random() * 4)].toLocaleString("en-US");
+    g.save(); g.lineWidth = 10; g.strokeStyle = "#000"; g.font = "900 78px sans-serif-black, sans-serif"; g.textAlign = "right"; g.textBaseline = "top";
+    g.strokeText(dinero, W - 60, 250); g.fillStyle = "#78FF82"; g.fillText(dinero, W - 60, 250); g.restore();
+    for (let k = 0; k < 5; k++) {
+      const px = W - 98 - k * 70, py = 372; g.beginPath();
+      for (let i = 0; i < 10; i++) { const rad = i % 2 ? 13 : 30, a = i * Math.PI / 5; g.lineTo(px + rad * Math.sin(a), py - rad * Math.cos(a)); }
+      g.closePath(); g.fillStyle = k < 3 ? "#FFD728" : "rgba(255,255,255,.35)"; g.fill(); g.strokeStyle = "#000"; g.lineWidth = 2; g.stroke();
+    }
+    const y = H - 330; fillRR(g, 60, y, W - 120, 112, 0, "rgba(0,0,0,.78)"); fillRR(g, 60, y, 14, 112, 0, e.c1);
+    txt(g, "NUEVA MISIÓN", 100, y + 34, 32, e.c1, "left");
+    const m = (t || cuenta || "CONSIGUE EL BOTÍN").toUpperCase().slice(0, 48); let tam = 38;
+    g.font = `900 ${tam}px sans-serif-black, sans-serif`; while (tam > 22 && g.measureText(m).width > W - 200) { tam -= 2; g.font = `900 ${tam}px sans-serif-black, sans-serif`; }
+    txt(g, m, 100, y + 80, tam, BL, "left");
+  },
+  vicecity(g, e, t) {             // atardecer synthwave: cielo morado, sol con franjas, palmeras y ciudad
+    const arriba = 300, abajo = 420;
+    const cielo = g.createLinearGradient(0, 0, 0, arriba); cielo.addColorStop(0, "#28145a"); cielo.addColorStop(1, "#b43282");
+    g.fillStyle = cielo; g.fillRect(0, 0, W, arriba);
+    g.fillStyle = "#FFAA3C"; g.beginPath(); g.arc(W / 2, arriba, 150, Math.PI, 0); g.fill();
+    g.fillStyle = "#9a2e7a"; for (let k = 0, yy = arriba - 70; yy < arriba; k++, yy += 18) g.fillRect(W / 2 - 150, yy, 300, 6 + k);
+    txt(g, "GRAND THEFT AUTO", W / 2, 70, 34, "rgba(255,255,255,.9)"); txt(g, "VI", W / 2, 160, 110, "#FF5CAA");
+    const y0 = H - abajo; const suelo = g.createLinearGradient(0, y0, 0, H); suelo.addColorStop(0, "#3c1450"); suelo.addColorStop(1, "#140a28");
+    g.fillStyle = suelo; g.fillRect(0, y0, W, abajo);
+    for (let x = 0; x < W; x += 70) { const h = 60 + (x * 37) % 140; g.fillStyle = "#1e0c32"; g.fillRect(x, y0 - h, 56, h); g.fillStyle = "rgba(255,200,90,.8)"; for (let wy = y0 - h + 14; wy < y0 - 10; wy += 26) g.fillRect(x + 12, wy, 8, 8); }
+    g.strokeStyle = "#0f0519"; g.lineCap = "round";
+    for (const [px, alto] of [[90, 260], [W - 110, 300], [230, 180]]) {
+      g.lineWidth = 16; g.beginPath(); g.moveTo(px, y0); g.lineTo(px + 18, y0 - alto); g.stroke(); g.lineWidth = 12;
+      for (const a of [-160, -125, -55, -20, 15]) { const r = a * Math.PI / 180; g.beginPath(); g.moveTo(px + 18, y0 - alto); g.quadraticCurveTo(px + 18 + 60 * Math.cos(r), y0 - alto - 30, px + 18 + 110 * Math.cos(r), y0 - alto + 40 * Math.abs(Math.sin(r))); g.stroke(); }
+    }
+    const m = (t || "GTA 6").toUpperCase().slice(0, 40); let tam = 54;
+    g.font = `900 ${tam}px sans-serif-black, sans-serif`; while (tam > 26 && g.measureText(m).width > W - 140) { tam -= 2; g.font = `900 ${tam}px sans-serif-black, sans-serif`; }
+    fillRR(g, 60, H - 250, W - 120, 100, 24, "rgba(255,92,170,.92)"); txt(g, m, W / 2, H - 200, tam, BL);
+  },
+  bloques(g, e, t, cuenta) {      // borde de tacos de colores, etiqueta de jugador y contador
+    const cols = e.cols || ["#E3262B", "#FFC83D", "#2B7BFF", "#2EC24A"], s = 54; let i = 0;
+    const taco = (x, y) => { fillRR(g, x, y, s - 4, s - 4, 4, cols[i++ % cols.length]); g.strokeStyle = "rgba(255,255,255,.6)"; g.lineWidth = 4; g.beginPath(); g.arc(x + s / 2 - 2, y + s / 2 - 2, 11, 0, 7); g.stroke(); };
+    for (let x = 0; x < W; x += s) { taco(x, 0); taco(x, H - s); }
+    for (let y = s; y < H - s; y += s) { taco(0, y); taco(W - s, y); }
+    fillRR(g, 90, 120, 470, 80, 0, "rgba(20,20,20,.82)"); fillRR(g, 90, 120, 16, 80, 0, cols[1]);
+    txt(g, (cuenta || "JUGADOR 1").toUpperCase().slice(0, 16), 130, 160, 40, BL, "left");
+    fillRR(g, W - 440, 120, 350, 80, 0, "rgba(20,20,20,.82)"); fillRR(g, W - 440, 120, 16, 80, 0, cols[3]);
+    txt(g, "R$ " + [1500, 25000, 100000, 999][Math.floor(Math.random() * 4)].toLocaleString("en-US"), W - 400, 160, 40, BL, "left");
+    fillRR(g, 90, H - 330, W - 180, 100, 0, "rgba(20,20,20,.82)"); txt(g, (t || "NIVEL SUPERADO").toUpperCase().slice(0, 34), 120, H - 280, 40, cols[1], "left");
   },
   pantano(g, e, t) {
     g.fillStyle = "rgba(25,70,20,.92)";
